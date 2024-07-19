@@ -49,6 +49,7 @@ python3 manage.py loaddata db.json
 ### Данные для доступа к базе данных описаны в файле .env.docker;
 - в файле .env.docker находятся переменные окружения, для запуска PostgresSQL 
 - Суперюзер создан и загружаеться при заполнении БД
+- login: botalov, password: 12345
 - Дополнительно можно создать суперюзера командой 
 ```
 python maneg.py createsuperuser
