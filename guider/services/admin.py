@@ -8,9 +8,8 @@ class ShopAdmin(admin.ModelAdmin):
     list_display = [
         "id",
         "name",
-        "city",
         "street",
-        "house",
+        "house_number",
         "opening_time",
         "closing_time",
     ]

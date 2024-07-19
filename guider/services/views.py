@@ -21,14 +21,13 @@ class StreetViewSet(generics.ListAPIView):
 
 
 class ShopApiView(generics.ListCreateAPIView):
-    # queryset = Shop.objects.all()
     serializer_class = ShopSerializer
 
     def get_queryset(self):
         queryset = Shop.objects.all()
-        street_name = self.request.query_params.get('street', None)
-        city_name = self.request.query_params.get('city', None)
-        open_status = self.request.query_params.get('open', None)
+        street_name = self.request.query_params.get("street", None)
+        city_name = self.request.query_params.get("city", None)
+        open_status = self.request.query_params.get("open", None)
 
         if street_name:
             queryset = queryset.filter(street__name__icontains=street_name)
@@ -36,19 +35,25 @@ class ShopApiView(generics.ListCreateAPIView):
             queryset = queryset.filter(street__city__name__icontains=city_name)
         if open_status is not None:
             current_time = timezone.localtime(timezone.now()).time()
-            if open_status == '1':
-                queryset = queryset.filter(opening_time__lte=current_time, closing_time__gte=current_time)
-            elif open_status == '0':
-                queryset = queryset.exclude(opening_time__lte=current_time, closing_time__gte=current_time)
+            if open_status == "1":
+                queryset = queryset.filter(
+                    opening_time__lte=current_time, closing_time__gte=current_time
+                )
+            elif open_status == "0":
+                queryset = queryset.exclude(
+                    opening_time__lte=current_time, closing_time__gte=current_time
+                )
 
         return queryset
 
     def create(self, request, *args, **kwargs):
+        # Получаем ID улицы из запроса
+        street_id = request.data.get("street_name")
+        street_instance = Street.objects.get(id=street_id)  # Получаем экземпляр улицы
+        # Создаем магазин с экземпляром улицы
         serializer = self.get_serializer(data=request.data)
+        
         serializer.is_valid(raise_exception=True)
-        # shop = serializer.save()
-        # headers = self.get_success_headers(serializer.data)
-        self.perform_create(serializer)
-        return Response(
-            {"id": serializer.data["id"]}, status=status.HTTP_201_CREATED
-        )
+        
+        serializer.save(street=street_instance)  # Передаем экземпляр улицы
+        return Response({"id": serializer.data["id"]}, status=status.HTTP_201_CREATED)
