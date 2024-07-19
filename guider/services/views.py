@@ -43,17 +43,27 @@ class ShopApiView(generics.ListCreateAPIView):
                 queryset = queryset.exclude(
                     opening_time__lte=current_time, closing_time__gte=current_time
                 )
-
         return queryset
 
     def create(self, request, *args, **kwargs):
         # Получаем ID улицы из запроса
         street_id = request.data.get("street_name")
-        street_instance = Street.objects.get(id=street_id)  # Получаем экземпляр улицы
+
+        try:
+            street_instance = Street.objects.get(
+                id=street_id
+            )
+        except Street.DoesNotExist:
+            return Response(
+                {"error": "Street not found."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
         # Создаем магазин с экземпляром улицы
         serializer = self.get_serializer(data=request.data)
-        
-        serializer.is_valid(raise_exception=True)
-        
-        serializer.save(street=street_instance)  # Передаем экземпляр улицы
-        return Response({"id": serializer.data["id"]}, status=status.HTTP_201_CREATED)
+        if serializer.is_valid():
+            serializer.save(street=street_instance)  # Передаем экземпляр улицы
+            return Response(
+                {"id": serializer.data["id"]}, status=status.HTTP_201_CREATED
+            )
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
